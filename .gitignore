@@ -1,3 +1,4 @@
 .env 
 env/
-interview_state_20241225_120339.json
+interview_*
+__pycache__/

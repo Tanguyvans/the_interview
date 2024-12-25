@@ -137,87 +137,91 @@ def is_negative_response(response: str) -> bool:
     response_lower = response.lower().strip()
     return any(indicator in response_lower for indicator in negative_indicators)
 
-def evaluate_response(client, response: str, field: str, memory: InterviewMemory) -> Dict:
+def evaluate_response(llm: ChatOpenAI, response: str, field: str, memory: InterviewMemory) -> Dict:
+    """
+    Enhanced evaluation that considers all previous responses for the field
+    """
+    if is_negative_response(response):
+        return {
+            "satisfaction_score": 0,  # Use 0 to indicate "not applicable"
+            "missing_info": "Candidate has no experience in this area",
+            "follow_up_question": "",
+            "analysis": "Candidate clearly indicated no experience in this area",
+            "summary": f"No {field.replace('_', ' ')} to report",
+            "skip_topic": True  # New flag to indicate we should skip this topic
+        }
+    # Add new response to memory
+    memory.add_response(field, response)
+    
+    # Get complete history for this field
+    complete_response = memory.get_field_history(field)
+    
+    evaluation_prompt = f"""
+    You are an expert interviewer evaluating candidate responses.
+    
+    Field: {field}
+    Expected information: {FIELD_REQUIREMENTS[field]['expected']}
+    
+    Complete history of candidate's responses for this field:
+    "{complete_response}"
+    
+    Please evaluate the combined responses and provide:
+    1. Satisfaction score (1-10) based on completeness and relevance
+    2. Analysis of missing or unclear information
+    3. Specific follow-up question if needed (considering all previous responses)
+    4. Summary of what we know so far
+    
+    Return your evaluation in this exact JSON format:
+    {{
+        "satisfaction_score": <int>,
+        "missing_info": "<string>",
+        "follow_up_question": "<string>",
+        "analysis": "<string>",
+        "summary": "<string>"
+    }}
+    """
+    
     try:
-        # Get complete history for this field
-        complete_response = memory.get_field_history(field)
-        
-        # Create the evaluation prompt
-        evaluation_prompt = f"""
-        You are evaluating a response for the field: {field}
-        Expected information: {FIELD_REQUIREMENTS[field]['expected']}
-        Complete response history: {complete_response}
-        Latest response: {response}
-
-        Please evaluate the complete response history and provide:
-        1. A satisfaction score (1-10)
-        2. A brief analysis
-        3. Any missing information
-        4. A follow-up question if needed
-
-        Format your response as JSON:
-        {{
-            "satisfaction_score": <score>,
-            "analysis": "<brief analysis>",
-            "missing_info": "<list missing info or 'none'>",
-            "follow_up_question": "<question to get missing info>"
-        }}
-        """
-
-        # Get completion from OpenAI
-        completion = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are an expert interviewer evaluating responses."},
-                {"role": "user", "content": evaluation_prompt}
-            ],
-            temperature=0.7
-        )
-
-        # Extract the response
-        evaluation = json.loads(completion.choices[0].message.content)
-        
-        # Add default values if any key is missing
-        evaluation.setdefault("satisfaction_score", 5)
-        evaluation.setdefault("analysis", "Analysis not provided")
-        evaluation.setdefault("missing_info", "None")
-        evaluation.setdefault("follow_up_question", FIELD_REQUIREMENTS[field]['follow_up_questions'][0])
-        
-        return evaluation
-
+        result = llm.invoke(evaluation_prompt)
+        return json.loads(result.content)
     except Exception as e:
-        print(f"Error in evaluation: {str(e)}")
+        print(f"Error in evaluation: {e}")
         return {
             "satisfaction_score": 5,
-            "analysis": "Error occurred during analysis",
             "missing_info": "Error in evaluation",
-            "follow_up_question": FIELD_REQUIREMENTS[field]['follow_up_questions'][0] if field in FIELD_REQUIREMENTS else "Could you please provide more details?",
-            "skip_topic": False
+            "follow_up_question": FIELD_REQUIREMENTS[field]['follow_up_questions'][0],
+            "analysis": "Error occurred during analysis",
+            "summary": ""
         }
-
-def determine_next_question(interview_form: Dict, current_field: str) -> Tuple[str, str]:
+    
+def determine_next_question(current_form: Dict, current_field: str) -> Tuple[str, str]:
     """
     Determine the next question based on current form state
     """
-    # Get list of all fields
-    fields = list(interview_form.keys())
+    print("\nDebug - Current form state:")  # Debug line
+    for f, d in current_form.items():
+        print(f"{f}: value='{d['value']}', satisfaction={d['satisfaction']}")
     
-    # If we have a current field and it's complete, move to next field
-    if current_field:
+    # Find the next field after the current one
+    fields = list(current_form.keys())
+    if current_field and current_form[current_field]["satisfaction"] >= 7:
         try:
             current_index = fields.index(current_field)
-            next_field = fields[current_index + 1]  # Get next field
+            next_field = fields[current_index + 1]
             return (next_field, f"Let's talk about your {next_field.replace('_', ' ')}. {FIELD_REQUIREMENTS[next_field]['follow_up_questions'][0]}")
-        except IndexError:
-            # Only return None if we've really reached the end
+        except (ValueError, IndexError):
             return (None, "We've covered everything I needed to know. Is there anything else you'd like to add?")
     
-    # If no current field, find the first incomplete field
-    for field in fields:
-        if interview_form[field]["satisfaction"] < 7:
+    # If we're not moving to next field, find the first incomplete field
+    for field, data in current_form.items():
+        # Skip fields that have been marked as not applicable (satisfaction = 0)
+        if data["satisfaction"] == 0:
+            continue
+            
+        # Check if the field needs more information
+        if data["satisfaction"] < 7:
             return (field, FIELD_REQUIREMENTS[field]['follow_up_questions'][0])
     
-    # If all fields are complete
     return (None, "We've covered everything I needed to know. Is there anything else you'd like to add?")
 
 def save_interview_state(interview_data: Dict, filename: str = None, current_field: str = None):

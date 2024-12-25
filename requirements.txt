@@ -1,3 +1,5 @@
 langchain-community 
 langchain-openai
 openai
+
+streamlit
