@@ -1,0 +1,99 @@
+{
+  "messages": [
+    {
+      "role": "assistant",
+      "content": "Could you please tell me your full name?"
+    },
+    {
+      "role": "user",
+      "content": "My name is Tanguy Vansnick"
+    },
+    {
+      "role": "assistant",
+      "content": "Great! Let's move on to your current role. What are your main responsibilities in this role?"
+    },
+    {
+      "role": "user",
+      "content": "I am a PhD researcher "
+    },
+    {
+      "role": "assistant",
+      "content": "Could you please share more details about your role as a PhD researcher? Specifically, could you describe your key responsibilities, the size of your team, and any main achievements you've had in this role?"
+    },
+    {
+      "role": "user",
+      "content": "I have do work on research in the field of AI and machine learning. I work with my professor and two other PhD researchers"
+    },
+    {
+      "role": "assistant",
+      "content": "Could you please specify the institution you are associated with, elaborate on your key responsibilities, and share some of your main achievements in your current role as a PhD researcher?"
+    },
+    {
+      "role": "user",
+      "content": "I work at hte University of Mons"
+    },
+    {
+      "role": "assistant",
+      "content": "Could you please elaborate more on your key responsibilities as a PhD researcher and any main achievements you have had in this role?"
+    }
+  ],
+  "interview_form": {
+    "name": {
+      "value": "My name is Tanguy Vansnick",
+      "responses": [
+        "My name is Tanguy Vansnick"
+      ],
+      "satisfaction": 10
+    },
+    "current_role": {
+      "value": "I am a PhD researcher  I have do work on research in the field of AI and machine learning. I work with my professor and two other PhD researchers I work at hte University of Mons",
+      "responses": [
+        "I am a PhD researcher ",
+        "I have do work on research in the field of AI and machine learning. I work with my professor and two other PhD researchers",
+        "I work at hte University of Mons"
+      ],
+      "satisfaction": 6
+    },
+    "years_of_experience": {
+      "value": "",
+      "responses": [],
+      "satisfaction": 0
+    },
+    "technical_skills": {
+      "value": "",
+      "responses": [],
+      "satisfaction": 0
+    },
+    "project_experience": {
+      "value": "",
+      "responses": [],
+      "satisfaction": 0
+    },
+    "motivation": {
+      "value": "",
+      "responses": [],
+      "satisfaction": 0
+    },
+    "preferred_work_environment": {
+      "value": "",
+      "responses": [],
+      "satisfaction": 0
+    }
+  },
+  "memory": {
+    "field_memory": {
+      "name": [
+        "My name is Tanguy Vansnick"
+      ],
+      "current_role": [
+        "I am a PhD researcher ",
+        "I have do work on research in the field of AI and machine learning. I work with my professor and two other PhD researchers",
+        "I work at hte University of Mons"
+      ]
+    },
+    "current_responses": {
+      "name": "My name is Tanguy Vansnick",
+      "current_role": "I am a PhD researcher  I have do work on research in the field of AI and machine learning. I work with my professor and two other PhD researchers I work at hte University of Mons"
+    }
+  }
+}

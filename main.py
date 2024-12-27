@@ -1,8 +1,4 @@
 from langchain_openai import ChatOpenAI
-from langchain.agents import initialize_agent, AgentType
-from langchain.agents import Tool
-from langchain.prompts import PromptTemplate
-from langchain.memory import ConversationBufferMemory
 from collections import defaultdict
 from typing import Dict, Tuple
 from dotenv import load_dotenv

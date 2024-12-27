@@ -1,8 +1,7 @@
 from openai import OpenAI
 import streamlit as st
 import os
-from main import InterviewMemory, evaluate_response, determine_next_question, interview_form, FIELD_REQUIREMENTS
-import json
+from main import InterviewMemory, evaluate_response, interview_form, FIELD_REQUIREMENTS
 
 def is_negative_response(response: str) -> bool:
     """
